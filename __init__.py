@@ -28,7 +28,7 @@ class PybotMagics(Magics):
     def pybot(self, line, cell):
         prompt = line.strip().lower()
         opt = self.opt_status()
-        if opt=='new' or prompt in ['opt','help','?']:
+        if opt=='new' or prompt in ['opt','opt in','opt out']:
 
             def on_button_optin(b):
                 with open(settings.EULA,"w") as f:
@@ -60,17 +60,18 @@ class PybotMagics(Magics):
             response.raise_for_status()
             output = response.text
             display(HTML(f"<code>{output}</code>"))
+        elif prompt in ["prompts", "help", "?" ]:
+            display("TODO: get all working prompts")
         else:  
             # Run the main code 
-            print("do something") 
-#             lines = "".join(cell)
-#             nbe_props = self.get_notebook_environment()
-#             payload = { "prompt": prompt, "celldata": lines, "notebook_environment": nbe_props,"opt" : opt }
-#             headers = { 'accept' : 'application/json', 'X-Api-Key': settings.API_KEY, 'Content-Type' : 'application/json' }
-#             response = requests.post(settings.PYBOT_URL, headers=headers, json = payload)
-#             response.raise_for_status()
-#             output = response.text
-#             self.shell.set_next_input(output, replace=False)
+            lines = "".join(cell)
+            nbe_props = self.get_notebook_environment()
+            payload = { "prompt": prompt, "celldata": lines, "notebook_environment": nbe_props,"opt" : opt }
+            headers = { 'accept' : 'application/json', 'X-Api-Key': settings.API_KEY, 'Content-Type' : 'application/json' }
+            response = requests.post(settings.PYBOT_URL, headers=headers, json = payload)
+            response.raise_for_status()
+            output = response.text
+            self.shell.set_next_input(output, replace=False)
                
     @cell_magic
     def demo(self, line, cell):
