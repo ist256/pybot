@@ -1,49 +1,48 @@
-import requests
 from IPython.core.magic import Magics, magics_class, cell_magic
-
+from IPython.display import display, HTML, clear_output
+import ipywidgets
+import os
+import requests
 from coursetools.nbenvironment import NbEnvironment
+import pybot.settings as settings
 
-import settings as settings
-
-
-def get_notebook_environment():
-    nbe_props = NbEnvironment().properties
-    skipkeys = ['minio_client', 'settings', 'run_datetime']
-    for k in skipkeys:
-        del nbe_props[k] 
-    return nbe_props
-
-def opt_status(eula=pbs.EULA):
-    if not os.path.exists(eula):
-        return "new"
-    else:
-        with open(eula,"r") as f:
-            opt = f.read().strip().lower()
-            return "in" if opt != 'out' else 'out'
-
-        
 @magics_class
-class MyMagics(Magics):
+class PybotMagics(Magics):
 
+    def get_notebook_environment(self):
+        nbe_props = NbEnvironment().properties
+        skipkeys = ['minio_client', 'settings', 'run_datetime']
+        for k in skipkeys:
+            del nbe_props[k] 
+        return nbe_props
+
+    def opt_status(self, eula=settings.EULA):
+        if not os.path.exists(eula):
+            return "new"
+        else:
+            with open(eula,"r") as f:
+                opt = f.read().strip().lower()
+                return "in" if opt != 'out' else 'out'
+    
     @cell_magic
     def pybot(self, line, cell):
-        line = line.strip().lower()
-        opt = opt_status()
-        if opt=='new' or line in ['opt','help','?']:
+        prompt = line.strip().lower()
+        opt = self.opt_status()
+        if opt=='new' or prompt in ['opt','help','?']:
 
             def on_button_optin(b):
-                with open(pbs.EULA,"w") as f:
+                with open(settings.EULA,"w") as f:
                     f.write("in")
                 clear_output()
                 display(HTML("You are now opted IN. Run this cell again to use the assistant."))            
 
             def on_button_optout(b):
-                with open(pbs.EULA,"w") as f:
+                with open(settings.EULA,"w") as f:
                     f.write("out")
                 clear_output()
                 display(HTML("You are now opted OUT. Run this cell again to use the assistant."))                            
                 
-            display(HTML(study_text))
+            display(HTML(settings.STUDY_TEXT))
             if opt == 'in':
                 display(HTML("<p>At present, you have opted IN.<p>"))
             elif opt=='out':
@@ -56,16 +55,22 @@ class MyMagics(Magics):
             display(ipywidgets.HBox([button_optin, button_optout]))            
             button_optin.on_click(on_button_optin)
             button_optout.on_click(on_button_optout)
-        else:  
-            # Run the main code 
-            lines = "".join(cell)
-            nbe_props = get_notebook_environment()
-            payload = { "prompt": line, "celldata": lines, "notebook_environment": nbe_props,"opt" : opt }
-            headers = { 'accept' : 'application/json', 'X-Api-Key': settings.API_KEY, 'Content-Type' : 'application/json' }
-            response = requests.post(settings.PYBOT_URL, headers=headers, json = payload)
+        elif prompt in ["version", "ver", "about"]:
+            response = requests.get(settings.PYBOT_URL)
             response.raise_for_status()
             output = response.text
-            self.shell.set_next_input(output, replace=False)
+            display(HTML(f"<code>{output}</code>"))
+        else:  
+            # Run the main code 
+            print("do something") 
+#             lines = "".join(cell)
+#             nbe_props = self.get_notebook_environment()
+#             payload = { "prompt": prompt, "celldata": lines, "notebook_environment": nbe_props,"opt" : opt }
+#             headers = { 'accept' : 'application/json', 'X-Api-Key': settings.API_KEY, 'Content-Type' : 'application/json' }
+#             response = requests.post(settings.PYBOT_URL, headers=headers, json = payload)
+#             response.raise_for_status()
+#             output = response.text
+#             self.shell.set_next_input(output, replace=False)
                
     @cell_magic
     def demo(self, line, cell):
@@ -74,6 +79,6 @@ class MyMagics(Magics):
         
 try:
     ip = get_ipython()
-    ip.register_magics(MyMagics)
+    ip.register_magics(PybotMagics)
 except NameError:
     pass # Not in a jupyter notebook
