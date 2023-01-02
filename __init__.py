@@ -1,6 +1,7 @@
 from IPython.core.magic import Magics, magics_class, cell_magic
 from IPython.display import display, HTML, clear_output
 import ipywidgets
+import uuid
 import os
 import requests
 from coursetools.nbenvironment import NbEnvironment
@@ -9,8 +10,9 @@ import pybot.settings as settings
 @magics_class
 class PybotMagics(Magics):
 
-    def get_notebook_environment(self):
+    def get_notebook_environment(self):    
         nbe_props = NbEnvironment().properties
+        nbe_props['node_id'] = uuid.uuid1().node
         skipkeys = ['minio_client', 'settings', 'run_datetime']
         for k in skipkeys:
             del nbe_props[k] 
