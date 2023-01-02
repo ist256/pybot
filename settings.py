@@ -1,3 +1,4 @@
+VERSION = "20230102"
 API_KEY = "you68hgbe3o8gvic9np5agyyqr5jneqbspz8urge"
 PYBOT_URL = "https://pybot.pub.cent-su.org"
 EULA = "/home/jovyan/library/.pybot-eula"
