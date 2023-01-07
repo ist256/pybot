@@ -4,6 +4,7 @@ import ipywidgets
 import uuid
 import os
 import requests
+import json
 from coursetools.nbenvironment import NbEnvironment
 import pybot.settings as settings
 
@@ -13,6 +14,10 @@ class PybotMagics(Magics):
     def get_notebook_environment(self):    
         nbe_props = NbEnvironment().properties
         nbe_props['node_id'] = uuid.uuid1().node
+        #cleanup up numpy bug
+        if "assignment" in nbe_props.keys():
+            nbe_props['assignment']['total_points'] = int(nbe_props['assignment'].get('total_points',0))
+
         skipkeys = ['minio_client', 'settings', 'run_datetime']
         for k in skipkeys:
             del nbe_props[k] 
@@ -82,10 +87,9 @@ class PybotMagics(Magics):
             output = response.text
             display(HTML(f"<code>{output}</code>"))
         elif prompt == "" or prompt in prompts.keys():
-            prompt_data = prompts[prompt].get('data') + "\n" if prompt != "" else ""
-            lines = prompt_data + "".join(cell)
+            lines = "".join(cell)
             nbe_props = self.get_notebook_environment()
-            payload = { "prompt": prompt, "celldata": lines, "notebook_environment": nbe_props,"opt" : opt }
+            payload = { "prompt": prompt, "celldata": lines, "notebook_environment": nbe_props, "opt" : opt }            
             headers = { 'accept' : 'application/json', 'X-Api-Key': settings.API_KEY, 'Content-Type' : 'application/json' }
             try:
                 response = requests.post(settings.PYBOT_URL, headers=headers, json = payload)
