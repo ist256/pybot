@@ -87,19 +87,22 @@ class PybotMagics(Magics):
             output = response.text
             display(HTML(f"<code>{output}</code>"))
         elif prompt == "" or prompt in prompts.keys():
-            lines = "".join(cell)
-            nbe_props = self.get_notebook_environment()
-            payload = { "prompt": prompt, "celldata": lines, "notebook_environment": nbe_props, "opt" : opt }            
-            headers = { 'accept' : 'application/json', 'X-Api-Key': settings.API_KEY, 'Content-Type' : 'application/json' }
-            try:
-                response = requests.post(settings.PYBOT_URL, headers=headers, json = payload)
-                response.raise_for_status()
-                lines = response.text.strip().split("\n")
-                lines = [line for line in lines if len(line.strip()) >0]
-                output = "\n".join(lines)
-                self.shell.set_next_input(output, replace=False)
-            except requests.HTTPError as e:
-                print("The API is Busy. Please Try Again.\nError: ", e)
+            lines = "".join(cell).strip()
+            if lines != "":
+                nbe_props = self.get_notebook_environment()
+                payload = { "prompt": prompt, "celldata": lines, "notebook_environment": nbe_props, "opt" : opt }            
+                headers = { 'accept' : 'application/json', 'X-Api-Key': settings.API_KEY, 'Content-Type' : 'application/json' }
+                try:
+                    response = requests.post(settings.PYBOT_URL, headers=headers, json = payload)
+                    response.raise_for_status()
+                    lines = response.text.strip().split("\n")
+                    lines = [line for line in lines if len(line.strip()) >0]
+                    output = "\n".join(lines)
+                    self.shell.set_next_input(output, replace=False)
+                except requests.HTTPError as e:
+                    print("The API is Busy. Please Try Again.\nError: ", e)
+            else:
+                print("Explain what you want me to do, please!")
         else:
             self.display_prompts(prompts)
             
