@@ -42,15 +42,17 @@ class PybotMagics(Magics):
         keys.sort()
         # usage = [f"<code>%%pybot {k}</code>" for k in keys]
         # desc = [prompts[k]['description'] for k in keys]
-        display(HTML(f"<p><code>%%pybot</code>&emsp;Ask PyBot to write code for you."))        
+        display(HTML(f"<p><code>%%pybot</code>&emsp;Ask PyBot to write code for you. Now with Chat-GPT!"))        
         for k in keys:
-            display(HTML(f"<p><code>%%pybot {k}</code>&emsp;{prompts[k]['description']}"))        
+            display(HTML(f"<p><code>%%pybot {k}</code>&emsp;{prompts[k].get('description','No Description')}"))        
         
     
     @cell_magic
     def pybot(self, line, cell):
         prompt = line.strip().lower()
         prompts = self.get_prompts()
+        if prompts.get("items") != None:
+            prompts = prompts.get("items")            
         opt = self.opt_status()
         if opt=='new' or prompt in ['opt','opt in','opt out','optin','optout']:
             def on_button_optin(b):
@@ -87,6 +89,7 @@ class PybotMagics(Magics):
             output = response.text
             display(HTML(f"<code>{output}</code>"))
         elif prompt == "" or prompt in prompts.keys():
+            prompt = "chatgpt" if prompt == "" else prompt # always use Chat-GPT
             lines = "".join(cell).strip()
             if lines != "":
                 nbe_props = self.get_notebook_environment()
