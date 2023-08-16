@@ -119,3 +119,5 @@ try:
     ip.register_magics(PybotMagics)
 except NameError:
     pass # Not in a jupyter notebook
+
+# end
